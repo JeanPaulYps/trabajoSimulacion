@@ -1,5 +1,6 @@
 from random import random
 from math import log, sqrt, sin, cos, pi, exp
+import sistema, persona, ascensor
 
 def generarTiempoEntreLlegadas(n,lam=17.755):
     """Acorde con la imagen 2 el tiempo de llegadas se distribuye exponencial con parametro 17.755,
@@ -26,7 +27,7 @@ def generarTiempoDeServicioNormal(n,media= 145.86, desvEstand=43.459):
     n = numero de personas que desea simular
     media = media con que se ditribuye la distribucion normal
     devEstand = desviacion estandar de la distribucion normal"""
-    resultado = []
+    resultado = [0]
     for i in range (n//2):
         (xp1, xp2 ) = metodoBoxMuller(media,desvEstand)
         resultado.append( exp(xp1))
@@ -46,7 +47,7 @@ def generarTiempoDeServicioLognormal(n, media=77.697, desvEstand=49.858 ):
     devEstand = desviacion estandar de la distribucion log-normal
     Usando una modificacion al resultado del metodo box-muller mostrado en la fuente.
     fuente: https://webs.um.es/mpulido/miwiki/lib/exe/fetch.php?id=amio&cache=cache&media=wiki:simt4.pdf"""
-    resultado = []
+    resultado = [0] #Explcar el cero
     for i in range (n//2):
         (xp1, xp2 ) = metodoBoxMuller(media,desvEstand)
         resultado.append(xp1)
@@ -58,7 +59,7 @@ def generarTiempoDeServicioLognormal(n, media=77.697, desvEstand=49.858 ):
         resultado.append(xp1)
         return resultado
 
-def tLlegadas(tEntreLlegadas):
+def calcularTiempoEntreLlegadas (tEntreLlegadas):
     """Agregar DOC"""
     tLlegadas = [tEntreLlegadas[0]]
     for i in range (len(tEntreLlegadas) - 1):
@@ -66,17 +67,11 @@ def tLlegadas(tEntreLlegadas):
     return tLlegadas
 
 
-def simularElevadores(tLlegadas, tServicio1, tServicio2):
-    """Agregar DOC"""
-    """while(tLlegadas):
-        if (tLlegadas < tServicio1 < tServicio2):"""
-
 if __name__ == "__main__":
     x1 = 1; x2 = 2; x3 = 3
-    print(x1 < x2 < x3)
-
     numUsuarios = int(input())
     tEntreLlegadas = generarTiempoEntreLlegadas(numUsuarios)
     tServicios = generarTiempoDeServicioNormal(numUsuarios)
+    tLlegadas = calcularTiempoEntreLlegadas(tEntreLlegadas)
     print(len(tLlegadas))
     print(len(tServicios), tServicios)
