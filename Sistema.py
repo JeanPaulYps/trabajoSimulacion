@@ -2,29 +2,49 @@ from Ascensor import Ascensor
 from Persona import Persona
 
 class Sistema():
+    EVENTOS = {"Persona": "Llega Persona", "AscensorTermina": "Ascensor Termina", 
+                "ColaSube": "Personas suben ascensor", "PersonaSube": "Persona sube ascensor",
+                "PersonaCola": "Persona entra a la cola"}
     def __init__ (self, ascensor1, ascensor2, tLlegadas):
         self.personasEnCola = []
         self.personas = []
         self.relojSimulacion = []
+        self.resultadosSimulacion = [("Tiempo", "Evento", "Cambios de estados") ]
         self.ascensor1 = ascensor1
         self.ascensor2 = ascensor2
         self.tLlegadas = tLlegadas
 
     def personaSubeAscensor(self, ascensor):
-        persona = Persona(self.tLlegadas.pop(0))
+        tiempo = self.tLlegadas.pop(0)
+        persona = Persona(tiempo)
         self.personas.append(persona)
-        ascensor.iniciaServicio(persona.tLlegada) #Falta duracion
-        persona.asignartServicio(ascensor.tFinal)
+        ascensor.iniciaServicio(persona.tLlegada) 
+        persona.asignartServicio(persona.tLlegada)
+
+        self.relojSimulacion.append(tiempo)
+        self.resultadosSimulacion.append( (tiempo, self.EVENTOS["PersonaSube"], str(persona)) ) 
+
+    def asignarTiemposDeServicio (self, tServicio):
+        for persona in self.personasEnCola[0:8]:
+            persona.asignartServicio(tServicio)
 
     def personasEnColaSubenAlAscensor(self, ascensor):
-        tFinal = ascensor.terminaServicio()
-        ascensor.iniciaServicio(tFinal)
+        tiempo = ascensor.tFinal
+        ascensor.iniciaServicio(tiempo)
+        self.asignarTiemposDeServicio(tiempo)
         del(self.personasEnCola[0:8])
 
+        self.relojSimulacion.append(tiempo)
+        self.resultadosSimulacion.append( (tiempo, self.EVENTOS["ColaSube"], str(ascensor)) )
+
     def personaEntraALaCola(self):
-        persona = Persona(self.tLlegadas.pop())
+        tiempo = self.tLlegadas.pop()
+        persona = Persona(tiempo)
         self.personas.append(persona)
         self.personasEnCola.append(persona)
+
+        self.relojSimulacion.append(tiempo)
+        self.resultadosSimulacion.append((tiempo, self.EVENTOS["PersonaCola"], str(persona)))
 
     def relizarSimulacion(self):
         self.personaSubeAscensor(self.ascensor1)
@@ -48,34 +68,38 @@ class Sistema():
                 -Llega ascensor 1 no hay cola => termina servicio 
                 -Llega ascensor 2 no hay cola => termina servicio 
             """
-            if (min(self.tLlegadas[-1], self.ascensor1.tFinal, self.ascensor2.tFinal) == self.tLlegadas[-1] ):
-                if (not self.personasEnCola):
-                    if (self.ascensor1.estado):
+            if self.ascensor1.estado or self.ascensor2.estado:
+                if not self.personasEnCola:
+                    if self.ascensor1.estado:
                         self.personaSubeAscensor(self.ascensor1)
-                    elif (self.ascensor2.estado):
-                        self.personaSubeAscensor(self.ascensor2)
                     else:
-                        self.personaEntraALaCola()
+                        self.personaSubeAscensor(self.ascensor2)
                 else:
+                    if self.ascensor1.estado:
+                        self.personasEnColaSubenAlAscensor(self.ascensor1)
+                    else:
+                        self.personasEnColaSubenAlAscensor(self.ascensor2)
+            else:
+                if (min(self.tLlegadas[-1], self.ascensor1.tFinal, self.ascensor2.tFinal) 
+                    == self.tLlegadas[-1] ):
                     self.personaEntraALaCola()          
-            elif (min(self.tLlegadas[-1], self.ascensor1.tFinal, self.ascensor2.tFinal) == self.ascensor1.tFinal ):
-                if (not self.personasEnCola):
+                elif (min(self.tLlegadas[-1], self.ascensor1.tFinal, self.ascensor2.tFinal)
+                    == self.ascensor1.tFinal ):
+                    tiempo = self.ascensor1.tFinal
                     self.ascensor1.terminaServicio()
-                elif (self.personasEnCola):
-                    self.personasEnColaSubenAlAscensor(self.ascensor1)
-            elif (min(self.tLlegadas[-1], self.ascensor1.tFinal, self.ascensor2.tFinal) == self.ascensor2.tFinal ):
-                if (not self.personasEnCola):
+                    self.resultadosSimulacion.append( (tiempo, self.EVENTOS["AscensorTermina"], str(self.ascensor1)) )
+
+                elif (min(self.tLlegadas[-1], self.ascensor1.tFinal, self.ascensor2.tFinal) 
+                    == self.ascensor2.tFinal ):
+                    tiempo = self.ascensor2.tFinal
                     self.ascensor2.terminaServicio()
-                elif (self.personasEnCola):
-                    self.personasEnColaSubenAlAscensor(self.ascensor2)
-                """elif (self.ascensor1.tFinal < self.ascensor2.tfina):
-                    self.ascensor1.terminaServicio()
-                elif (self.ascensor2.tFinal < self.ascensor1.tfinal):
-                    self.ascensor2.terminaServicio()"""
-            """else:
-                if (self.tLlegadas[-1] < self.ascensor1.tFinal < self.ascensor2.tFinal):
-                    self.personaEntraALaCola()
-                elif (self.ascensor1.tFinal < self.ascensor2.tfinal < self.tLlegadas[-1]):
-                    self.personasEnColaSubenAlAscensor(self.ascensor1)
-                elif (self.ascensor2.tFinal < self.ascensor1.tfinal < self.tLlegadas[-1]):
-                    self.personasEnColaSubenAlAscensor(self.ascensor2)"""
+                    self.resultadosSimulacion.append( (tiempo, self.EVENTOS["AscensorTermina"], str(self.ascensor2)) )
+
+        if  not self.ascensor1.estado:
+            tiempo = self.ascensor1.tFinal
+            self.ascensor1.terminaServicio()
+            self.resultadosSimulacion.append( (tiempo, self.EVENTOS["AscensorTermina"], str(self.ascensor1)) )
+        if  not self.ascensor2.estado:
+            tiempo = self.ascensor2.tFinal
+            self.ascensor2.terminaServicio()
+            self.resultadosSimulacion.append( (tiempo, self.EVENTOS["AscensorTermina"], str(self.ascensor2)) )

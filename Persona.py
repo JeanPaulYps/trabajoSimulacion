@@ -4,3 +4,6 @@ class Persona():
 
     def asignartServicio (self, tServicio):
         self.tServicio = tServicio
+
+    def __str__(self):
+        return "{} llego".format(self.tLlegada)
