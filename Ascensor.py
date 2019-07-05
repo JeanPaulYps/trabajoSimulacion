@@ -1,9 +1,9 @@
+from sys import maxsize
 class Ascensor():
     def __init__ (self):
         self.estado = True
         self.tServicios = []
-        self.tInicio = 0
-        self.tFinal = 0
+        self.tFinal = maxsize
 
     def iniciaServicio(self, tInicio, duracion):
         self.estado = False
@@ -14,6 +14,8 @@ class Ascensor():
         self.estado = True
         tServicio = (self.tInicio, self.tFinal)
         self.tServicios.append(tServicio)
+        self.tFinal = maxsize
+        return tServicio[1]
         
     def obtenerEstado(self):
         return self.estado
