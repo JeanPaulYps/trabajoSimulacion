@@ -46,81 +46,71 @@ class Sistema():
         self.relojSimulacion.append(tiempo)
         self.resultadosSimulacion.append((tiempo, self.EVENTOS["PersonaCola"], str(persona)))
 
+    def llegaAscensor1(self):
+        return (min(self.tLlegadas[0], self.ascensor1.tFinal, self.ascensor2.tFinal)  == self.ascensor1.tFinal) and not self.ascensor1.estado
+    
+    def llegaAscensor2(self):
+        return min(self.tLlegadas[0], self.ascensor2.tFinal) == self.ascensor1.tFinal and not self.ascensor2.estado
 
+    def ascensor1LlegaPrimero(self):
+        return self.ascensor1.tFinal < self.ascensor2.tFinal 
+
+    def ascensor2LlegaPrimero(self):
+        return self.ascensor2.tFinal < self.ascensor1.tFinal 
+
+    def ascensorTerminaServicio(self, ascensor, numero):
+        tiempo = ascensor.tFinal
+        ascensor.terminaServicio()
+        self.resultadosSimulacion.append( (tiempo, self.EVENTOS["AscensorTermina"].format(numero)
+                                        , str(ascensor)))
+        
     def relizarSimulacion(self):
         self.personaSubeAscensor(self.ascensor1)
         while(self.tLlegadas or self.personasEnCola 
-            or self.ascensor1.estado or self.ascensor2.estado):
-            """
-            Verificar que accion ocurre primero: 
-                -Llega persona
-                -Llega ascensor 1
-                -Llega ascensor 2
-            Verificar si hay cola:
-                -Hay cola
-                -No hay cola
-            Verificar si hay ascensor:
-                -Hay ascensor
-                -No hay ascensor
-            Hacer un producto cartesiano de hay cola o no hay cola:
-                -Llega persona hay cola => forma en cola
-                -Llega ascensor 1 hay cola => termina servicio y sube gente al ascensor
-                -Llega ascensor 2 hay cola => termina servicio y sube gente al ascensor
-                -Llega persona no hay cola => toma ascensor 
-                -Llega ascensor 1 no hay cola => termina servicio 
-                -Llega ascensor 2 no hay cola => termina servicio 
-            """
+            or not self.ascensor1.estado or not self.ascensor2.estado):
             if self.tLlegadas:
-                if self.ascensor1.estado or self.ascensor2.estado:
+                if self.llegaAscensor1():
+                    self.ascensorTerminaServicio(self.ascensor1,1)
+                elif self.llegaAscensor2():
+                    self.ascensorTerminaServicio(self.ascensor2,2)
+                else:
                     if not self.personasEnCola:
                         if self.ascensor1.estado:
                             self.personaSubeAscensor(self.ascensor1)
-                        else:
+                        elif self.ascensor2.estado:
                             self.personaSubeAscensor(self.ascensor2)
+                        else:
+                            self.personaEntraALaCola()
                     else:
                         if self.ascensor1.estado:
                             self.personasEnColaSubenAlAscensor(self.ascensor1)
-                        else:
+                        elif self.ascensor2.estado:
                             self.personasEnColaSubenAlAscensor(self.ascensor2)
-                else:
-                    if (min(self.tLlegadas[0], self.ascensor1.tFinal, self.ascensor2.tFinal) 
-                        == self.tLlegadas[0] ):
-                        self.personaEntraALaCola()          
-                    elif (min(self.tLlegadas[0], self.ascensor1.tFinal, self.ascensor2.tFinal)
-                        == self.ascensor1.tFinal ):
-                        tiempo = self.ascensor1.tFinal
-                        self.ascensor1.terminaServicio()
-                        self.resultadosSimulacion.append( (tiempo, self.EVENTOS["AscensorTermina"].format(1)
-                                                        , str(self.ascensor1)) )
-                    elif (min(self.tLlegadas[0], self.ascensor1.tFinal, self.ascensor2.tFinal) 
-                        == self.ascensor2.tFinal ):
-                        tiempo = self.ascensor2.tFinal
-                        self.ascensor2.terminaServicio()
-                        self.resultadosSimulacion.append( (tiempo, self.EVENTOS["AscensorTermina"].format(2)
-                                                            , str(self.ascensor2)) )
-            else:
-                if self.ascensor1.estado and self.ascensor2.estado:
-                    if (min(self.ascensor1.tFinal, self.ascensor2.tFinal) == self.ascensor1.tFinal ):
-                        tiempo = self.ascensor1.tFinal
-                        self.ascensor1.terminaServicio()
-                        self.resultadosSimulacion.append( (tiempo, self.EVENTOS["AscensorTermina"].format(1)
-                                                        , str(self.ascensor1)) )
-                    elif (min(self.ascensor1.tFinal, self.ascensor2.tFinal)  == self.ascensor2.tFinal ):
-                        tiempo = self.ascensor2.tFinal
-                        self.ascensor2.terminaServicio()
-                        self.resultadosSimulacion.append( (tiempo, self.EVENTOS["AscensorTermina"].format(2)
-                                                            , str(self.ascensor2)) )
-                elif self.ascensor1.estado:                    
-                    tiempo = self.ascensor1.tFinal
-                    self.ascensor1.terminaServicio()
-                    self.resultadosSimulacion.append( (tiempo, self.EVENTOS["AscensorTermina"].format(1)
-                                                    , str(self.ascensor1)) )
+                        else:
+                            self.personaEntraALaCola()
+
+            elif self.personasEnCola:
+                if self.ascensor1.estado:
+                    self.personasEnColaSubenAlAscensor(self.ascensor1)
                 elif self.ascensor2.estado:
-                    tiempo = self.ascensor2.tFinal
-                    self.ascensor2.terminaServicio()
-                    self.resultadosSimulacion.append( (tiempo, self.EVENTOS["AscensorTermina"].format(2)
-                                                        , str(self.ascensor2)) )
-       
+                    self.personasEnColaSubenAlAscensor(self.ascensor2)
+                else:
+                    if self.ascensor1LlegaPrimero():
+                        self.ascensorTerminaServicio(self.ascensor1,1)
+                    else:
+                        self.ascensorTerminaServicio(self.ascensor2,2)
+            
+            else:
+                if self.ascensor1LlegaPrimero():
+                    self.ascensorTerminaServicio(self.ascensor1,1)
+                elif self.ascensor2LlegaPrimero():
+                    self.ascensorTerminaServicio(self.ascensor2,2)
+                elif not self.ascensor1.estado:
+                    self.ascensorTerminaServicio(self.ascensor1,1)
+                else:
+                    self.ascensorTerminaServicio(self.ascensor2,2)
+
+
 
     def escribirResultados (self):
         archivo = open("resultados.txt", "w+")
