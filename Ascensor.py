@@ -22,8 +22,4 @@ class Ascensor():
         return self.estado
 
     def __str__(self):
-        if (self.estado):
-            disponibilidad = "Disponible"
-        else:
-            disponibilidad = "No disponible"
-        return "{} {} {}".format(disponibilidad, self.tInicio, self.tFinal)
+        return "inicio {} termino {}".format( self.tInicio, self.tFinal)

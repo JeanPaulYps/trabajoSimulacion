@@ -37,8 +37,7 @@ class PruebasSistema(unittest.TestCase):
         self.assertEqual(len(sistema.personas), 1)
         self.assertEqual(sistema.personas[0].tLlegada, 5)
         self.assertEqual(ascensor1.tFinal, 15)
-        print(sistema.resultadosSimulacion)
-        
+        sistema.escribirResultados()        
 
 if __name__ == "__main__":
     unittest.main()

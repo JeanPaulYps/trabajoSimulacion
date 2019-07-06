@@ -1,6 +1,8 @@
 from random import random
 from math import log, sqrt, sin, cos, pi, exp
-import sistema, persona, ascensor
+from Sistema import Sistema
+from Persona import Persona
+from Ascensor import Ascensor
 
 def generarTiempoEntreLlegadas(n,lam=17.755):
     """Acorde con la imagen 2 el tiempo de llegadas se distribuye exponencial con parametro 17.755,
@@ -68,10 +70,13 @@ def calcularTiempoEntreLlegadas (tEntreLlegadas):
 
 
 if __name__ == "__main__":
-    x1 = 1; x2 = 2; x3 = 3
-    numUsuarios = int(input())
+    numUsuarios = int(input("Inserte numero de personas a simular: "))
     tEntreLlegadas = generarTiempoEntreLlegadas(numUsuarios)
-    tServicios = generarTiempoDeServicioNormal(numUsuarios)
+    tServicios1 = generarTiempoDeServicioNormal(numUsuarios)
+    tServicios2 = generarTiempoDeServicioLognormal(numUsuarios)
+    ascensor1 = Ascensor(tServicios1)
+    ascensor2 = Ascensor(tServicios2)
     tLlegadas = calcularTiempoEntreLlegadas(tEntreLlegadas)
-    print(len(tLlegadas))
-    print(len(tServicios), tServicios)
+    sistema = Sistema(ascensor1,ascensor2,tLlegadas)
+    sistema.relizarSimulacion()
+    sistema.escribirResultados()
